@@ -10,19 +10,28 @@ import {
   Link as LinkIcon,
   AlignLeft,
   MoreVertical,
+  Maximize2,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
+
+const PRIORITY_LABELS = {
+  P1: "Urgent",
+  P2: "High",
+  P3: "Medium",
+  P4: "Low",
+};
 
 const PRIORITY_COLORS = {
   P1: "bg-red-500 text-white",
   P2: "bg-orange-500 text-white",
   P3: "bg-blue-500 text-white",
-  P4: "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
+  P4: "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300",
 };
 
 const TodoCard = ({ todo, onEdit }) => {
-  const { updateTodo, deleteTodo } = useTodoStore();
+  const { updateTodo, deleteTodo, toggleSubtask, setFocusTask } =
+    useTodoStore();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const toggleComplete = () => {
@@ -75,7 +84,7 @@ const TodoCard = ({ todo, onEdit }) => {
             <span
               className={`text-xs font-bold px-2 py-0.5 rounded-full ${PRIORITY_COLORS[todo.priority]}`}
             >
-              {todo.priority}
+              {PRIORITY_LABELS[todo.priority]}
             </span>
             {todo.completed && (
               <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
@@ -89,7 +98,12 @@ const TodoCard = ({ todo, onEdit }) => {
           </div>
 
           <h3
-            className={`font-semibold text-lg text-text truncate ${todo.completed ? "line-through decoration-muted" : ""}`}
+            className={`font-semibold text-lg truncate ${todo.completed ? "line-through decoration-muted opacity-50" : ""}`}
+            style={{
+              color: todo.completed
+                ? undefined
+                : todo.textColor || "var(--color-text)",
+            }}
           >
             {todo.title}
           </h3>
@@ -129,17 +143,53 @@ const TodoCard = ({ todo, onEdit }) => {
               onEdit(todo);
             }}
             className="p-1.5 hover:bg-muted/10 rounded-lg text-muted hover:text-primary"
+            title="Edit"
           >
             <Edit2 size={16} />
           </button>
           <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setFocusTask(todo);
+            }}
+            className="p-1.5 hover:bg-muted/10 rounded-lg text-muted hover:text-purple-500"
+            title="Focus Mode"
+          >
+            <Maximize2 size={16} />
+          </button>
+          <button
             onClick={handleDelete}
             className="p-1.5 hover:bg-red-500/10 rounded-lg text-muted hover:text-red-500"
+            title="Delete"
           >
             <Trash2 size={16} />
           </button>
         </div>
       </div>
+
+      {/* Subtasks Preview - Always visible if present */}
+      {todo.subtasks && todo.subtasks.length > 0 && (
+        <div className="px-4 pb-3 -mt-1 space-y-1">
+          {todo.subtasks.map((task, i) => (
+            <div key={i} className="flex items-center gap-2 text-sm group/sub">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleSubtask(todo._id, i, !task.completed);
+                }}
+                className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${task.completed ? "bg-primary border-primary text-white" : "border-muted hover:border-primary"}`}
+              >
+                {task.completed && <CheckCircle2 size={10} />}
+              </button>
+              <span
+                className={`text-text/80 truncate ${task.completed ? "line-through text-muted" : ""}`}
+              >
+                {task.title}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Expanded Details */}
       {isExpanded && (

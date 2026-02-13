@@ -17,13 +17,15 @@ const THEMES = [
 const Settings = () => {
   const { user, updatePreferences, uploadBackground } = useAuthStore();
   const [uploading, setUploading] = useState(false);
+  const [overlay, setOverlay] = useState(
+    user?.preferences?.overlay || { dim: 0, blur: 0 },
+  );
 
   const handleThemeChange = (themeId) => {
     updatePreferences({ theme: themeId });
   };
 
-  const handleOverlayChange = (key, value) => {
-    const newOverlay = { ...user.preferences.overlay, [key]: Number(value) };
+  const handleOverlayCommit = (newOverlay) => {
     updatePreferences({ overlay: newOverlay });
   };
 
@@ -72,6 +74,60 @@ const Settings = () => {
               <span className="font-bold">{theme.name}</span>
             </button>
           ))}
+        </div>
+      </section>
+
+      {/* Font Section */}
+      <section className="bg-card rounded-2xl p-6 shadow-sm border border-border">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-primary/10 rounded-lg text-primary">
+            <span className="text-xl font-bold">Aa</span>
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-text">Typography</h2>
+            <p className="text-muted text-sm">
+              Choose a font that suits your style.
+            </p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+          {["Inter", "Roboto", "Lora", "Space Mono", "Comic Neue"].map(
+            (font) => (
+              <button
+                key={font}
+                onClick={() => updatePreferences({ font })}
+                className={`p-3 rounded-xl border text-center transition-all ${user?.preferences?.font === font ? "border-primary bg-primary/5 text-primary" : "border-border hover:border-muted"}`}
+                style={{ fontFamily: font }}
+              >
+                {font}
+              </button>
+            ),
+          )}
+        </div>
+
+        <div className="flex items-center gap-4 border-t border-border pt-4">
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-text mb-1">
+              Global Text Color
+            </label>
+            <p className="text-xs text-muted">
+              Override the theme's text color.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              value={user?.preferences?.textColor || "#000000"}
+              onChange={(e) => updatePreferences({ textColor: e.target.value })}
+              className="h-10 w-20 rounded cursor-pointer border border-border"
+            />
+            <button
+              onClick={() => updatePreferences({ textColor: "" })}
+              className="text-xs text-muted hover:text-red-500 underline"
+            >
+              Reset to Theme
+            </button>
+          </div>
         </div>
       </section>
 
@@ -129,6 +185,21 @@ const Settings = () => {
             )}
           </div>
 
+          <div className="flex justify-end">
+            <button
+              onClick={handleRemoveBackground}
+              disabled={user?.preferences?.background?.type === "none"}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                user?.preferences?.background?.type === "none"
+                  ? "bg-muted/20 text-muted cursor-not-allowed"
+                  : "bg-red-100 text-red-600 hover:bg-red-200"
+              }`}
+            >
+              <Image size={16} />
+              Reset Background to Default
+            </button>
+          </div>
+
           {/* Overlay Settings */}
           <div className="bg-bg/50 p-4 rounded-xl space-y-4">
             <div className="flex items-center gap-2 mb-2">
@@ -139,17 +210,19 @@ const Settings = () => {
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-muted">Dim/Darken</span>
-                <span className="text-text font-mono">
-                  {user?.preferences?.overlay?.dim || 0}
-                </span>
+                <span className="text-text font-mono">{overlay.dim}</span>
               </div>
               <input
                 type="range"
                 min="0"
                 max="0.8"
                 step="0.1"
-                value={user?.preferences?.overlay?.dim || 0}
-                onChange={(e) => handleOverlayChange("dim", e.target.value)}
+                value={overlay.dim}
+                onChange={(e) =>
+                  setOverlay({ ...overlay, dim: Number(e.target.value) })
+                }
+                onMouseUp={() => handleOverlayCommit(overlay)}
+                onTouchEnd={() => handleOverlayCommit(overlay)}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
               />
             </div>
@@ -157,17 +230,19 @@ const Settings = () => {
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-muted">Blur</span>
-                <span className="text-text font-mono">
-                  {user?.preferences?.overlay?.blur || 0}px
-                </span>
+                <span className="text-text font-mono">{overlay.blur}px</span>
               </div>
               <input
                 type="range"
                 min="0"
                 max="20"
                 step="1"
-                value={user?.preferences?.overlay?.blur || 0}
-                onChange={(e) => handleOverlayChange("blur", e.target.value)}
+                value={overlay.blur}
+                onChange={(e) =>
+                  setOverlay({ ...overlay, blur: Number(e.target.value) })
+                }
+                onMouseUp={() => handleOverlayCommit(overlay)}
+                onTouchEnd={() => handleOverlayCommit(overlay)}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
               />
             </div>

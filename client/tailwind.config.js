@@ -13,7 +13,7 @@ export default {
         border: "var(--color-border)",
       },
       fontFamily: {
-        sans: ["Inter", "sans-serif"],
+        sans: ["var(--font-primary)", "sans-serif"],
       },
     },
   },

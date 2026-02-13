@@ -20,6 +20,19 @@ export const useAuthStore = create((set, get) => ({
       // Apply theme from user preferences
       const theme = response.data.preferences?.theme || "calm";
       document.documentElement.setAttribute("data-theme", theme);
+
+      if (response.data.preferences?.font) {
+        document.documentElement.style.setProperty(
+          "--font-primary",
+          response.data.preferences.font,
+        );
+      }
+      if (response.data.preferences?.textColor) {
+        document.documentElement.style.setProperty(
+          "--color-text",
+          response.data.preferences.textColor,
+        );
+      }
     } catch (error) {
       console.error(error);
       localStorage.removeItem("token");
@@ -82,7 +95,28 @@ export const useAuthStore = create((set, get) => ({
       if (preferences.theme) {
         document.documentElement.setAttribute("data-theme", preferences.theme);
       }
-      toast.success("Settings updated");
+
+      // Update font globally if changed
+      if (preferences.font) {
+        document.documentElement.style.setProperty(
+          "--font-primary",
+          preferences.font,
+        );
+      }
+
+      // Update text color globally if changed
+      if (preferences.textColor) {
+        document.documentElement.style.setProperty(
+          "--color-text",
+          preferences.textColor,
+        );
+      } else if (preferences.textColor === "") {
+        // Reset if empty
+        document.documentElement.style.removeProperty("--color-text");
+      }
+
+      // Only show toast if it's NOT a slider update (we can infer or just be less spammy)
+      // For now, let's keep it but ideally we should manage this in the component
     } catch (error) {
       toast.error("Failed to update settings");
     }

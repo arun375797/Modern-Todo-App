@@ -40,6 +40,15 @@ const userSchema = new mongoose.Schema(
         dim: { type: Number, default: 0 },
         blur: { type: Number, default: 0 },
       },
+      font: {
+        type: String,
+        default: "Inter",
+        enum: ["Inter", "Roboto", "Lora", "Space Mono", "Comic Neue"],
+      },
+      textColor: {
+        type: String,
+        default: "",
+      },
     },
   },
   {

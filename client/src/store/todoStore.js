@@ -4,8 +4,12 @@ import toast from "react-hot-toast";
 
 export const useTodoStore = create((set, get) => ({
   todos: [],
+  activeFocusTask: null, // New state for Focus Mode
   isLoading: false,
   error: null,
+
+  setFocusTask: (todo) => set({ activeFocusTask: todo }),
+  clearFocusTask: () => set({ activeFocusTask: null }),
 
   fetchTodos: async (filters = {}) => {
     set({ isLoading: true });
@@ -33,9 +37,20 @@ export const useTodoStore = create((set, get) => ({
   updateTodo: async (id, curData) => {
     // Optimistic update
     const prevTodos = get().todos;
-    set((state) => ({
-      todos: state.todos.map((t) => (t._id === id ? { ...t, ...curData } : t)),
-    }));
+    set((state) => {
+      const updatedTodos = state.todos.map((t) =>
+        t._id === id ? { ...t, ...curData } : t,
+      );
+      const updatedFocusTask =
+        state.activeFocusTask?._id === id
+          ? { ...state.activeFocusTask, ...curData }
+          : state.activeFocusTask;
+
+      return {
+        todos: updatedTodos,
+        activeFocusTask: updatedFocusTask,
+      };
+    });
 
     try {
       await api.put(`/todos/${id}`, curData);
@@ -44,6 +59,29 @@ export const useTodoStore = create((set, get) => ({
       // Rollback
       set({ todos: prevTodos });
       toast.error("Failed to update todo");
+    }
+  },
+
+  toggleSubtask: async (todoId, subtaskIndex, completed) => {
+    const prevTodos = get().todos;
+    const todo = prevTodos.find((t) => t._id === todoId);
+    if (!todo) return;
+
+    const newSubtasks = [...todo.subtasks];
+    newSubtasks[subtaskIndex] = { ...newSubtasks[subtaskIndex], completed };
+
+    // Optimistic
+    set((state) => ({
+      todos: state.todos.map((t) =>
+        t._id === todoId ? { ...t, subtasks: newSubtasks } : t,
+      ),
+    }));
+
+    try {
+      await api.put(`/todos/${todoId}`, { subtasks: newSubtasks });
+    } catch (error) {
+      set({ todos: prevTodos });
+      toast.error("Failed to update subtask");
     }
   },
 

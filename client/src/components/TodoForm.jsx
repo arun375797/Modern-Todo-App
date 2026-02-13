@@ -5,10 +5,10 @@ import { X, Plus, Trash2 } from "lucide-react";
 import { useTodoStore } from "../store/todoStore";
 
 const PRIORITIES = [
-  { value: "P1", label: "Priority 1", color: "bg-red-500" },
-  { value: "P2", label: "Priority 2", color: "bg-orange-500" },
-  { value: "P3", label: "Priority 3", color: "bg-blue-500" },
-  { value: "P4", label: "Priority 4", color: "bg-gray-500" },
+  { value: "P1", label: "Urgent", color: "bg-red-500" },
+  { value: "P2", label: "High", color: "bg-orange-500" },
+  { value: "P3", label: "Medium", color: "bg-blue-500" },
+  { value: "P4", label: "Low", color: "bg-gray-500" },
 ];
 
 const COLORS = [
@@ -33,7 +33,11 @@ const TodoForm = ({ isOpen, closeModal, initialData = null }) => {
       time: "",
       priority: "P4",
       color: "#3b82f6",
+      textColor: "#000000",
+      goalTime: 0,
       notes: "",
+      notes: "",
+      subtasks: [],
       links: [],
       dayLabel: "Today",
     },
@@ -44,12 +48,24 @@ const TodoForm = ({ isOpen, closeModal, initialData = null }) => {
     name: "links",
   });
 
+  const {
+    fields: subtaskFields,
+    append: appendSubtask,
+    remove: removeSubtask,
+  } = useFieldArray({
+    control,
+    name: "subtasks",
+  });
+
   const selectedColor = watch("color");
   const selectedPriority = watch("priority");
 
   useEffect(() => {
     if (initialData) {
-      reset(initialData);
+      reset({
+        ...initialData,
+        goalTime: initialData.goalTime ? initialData.goalTime / 60 : 0,
+      });
     } else {
       reset({
         title: "",
@@ -57,7 +73,10 @@ const TodoForm = ({ isOpen, closeModal, initialData = null }) => {
         time: "",
         priority: "P4",
         color: "#3b82f6",
+        textColor: "#000000",
+        goalTime: 0,
         notes: "",
+        subtasks: [],
         links: [],
         dayLabel: "Today",
       });
@@ -65,10 +84,16 @@ const TodoForm = ({ isOpen, closeModal, initialData = null }) => {
   }, [initialData, reset, isOpen]);
 
   const onSubmit = async (data) => {
+    // Convert goalTime from hours to minutes for storage
+    const formattedData = {
+      ...data,
+      goalTime: data.goalTime ? data.goalTime * 60 : 0,
+    };
+
     if (initialData) {
-      await updateTodo(initialData._id, data);
+      await updateTodo(initialData._id, formattedData);
     } else {
-      await addTodo(data);
+      await addTodo(formattedData);
     }
     closeModal();
     reset();
@@ -152,6 +177,24 @@ const TodoForm = ({ isOpen, closeModal, initialData = null }) => {
                       </div>
                     </div>
 
+                    {/* Goal Time */}
+                    <div>
+                      <label className="block text-sm font-medium text-muted mb-1">
+                        Goal Duration (Hours)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.5"
+                        min="0"
+                        placeholder="e.g. 8"
+                        className="w-full rounded-lg border border-border bg-bg px-3 py-2"
+                        {...register("goalTime", { valueAsNumber: true })}
+                      />
+                      <p className="text-xs text-muted mt-1">
+                        Set a target time to track your focus progress.
+                      </p>
+                    </div>
+
                     {/* Priority & Color */}
                     <div className="space-y-4">
                       <div>
@@ -170,25 +213,37 @@ const TodoForm = ({ isOpen, closeModal, initialData = null }) => {
                                   : "border-transparent bg-bg text-muted hover:bg-muted/10"
                               }`}
                             >
-                              {p.value}
+                              {p.label}
                             </button>
                           ))}
                         </div>
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-muted mb-1">
-                          Color Label
-                        </label>
-                        <div className="flex gap-2 flex-wrap">
-                          {COLORS.map((c) => (
-                            <button
-                              key={c}
-                              type="button"
-                              onClick={() => setValue("color", c)}
-                              className={`w-6 h-6 rounded-full transition-transform ${selectedColor === c ? "scale-125 ring-2 ring-offset-2 ring-offset-card ring-primary" : "hover:scale-110"}`}
-                              style={{ backgroundColor: c }}
-                            />
-                          ))}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-muted mb-1">
+                            Tag Color
+                          </label>
+                          <div className="flex gap-2 flex-wrap">
+                            {COLORS.map((c) => (
+                              <button
+                                key={c}
+                                type="button"
+                                onClick={() => setValue("color", c)}
+                                className={`w-6 h-6 rounded-full transition-transform ${selectedColor === c ? "scale-125 ring-2 ring-offset-2 ring-offset-card ring-primary" : "hover:scale-110"}`}
+                                style={{ backgroundColor: c }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-muted mb-1">
+                            Text Color
+                          </label>
+                          <input
+                            type="color"
+                            className="w-full h-10 rounded cursor-pointer"
+                            {...register("textColor")}
+                          />
                         </div>
                       </div>
                     </div>
@@ -205,6 +260,49 @@ const TodoForm = ({ isOpen, closeModal, initialData = null }) => {
                       placeholder="Add details..."
                       {...register("notes")}
                     />
+                  </div>
+
+                  {/* Subtasks */}
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-sm font-medium text-muted">
+                        Subtasks
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          appendSubtask({ title: "", completed: false })
+                        }
+                        className="text-xs text-primary flex items-center hover:underline"
+                      >
+                        <Plus size={14} className="mr-1" /> Add Step
+                      </button>
+                    </div>
+                    <div className="space-y-2 mb-6">
+                      {subtaskFields.map((field, index) => (
+                        <div key={field.id} className="flex gap-2 items-center">
+                          <div className="mt-1.5 w-2 h-2 rounded-full bg-muted/30" />
+                          <input
+                            placeholder={`Step ${index + 1}`}
+                            className="flex-1 rounded-lg border border-border bg-bg px-2 py-1 text-sm focus:ring-1 focus:ring-primary focus:outline-none"
+                            {...register(`subtasks.${index}.title`)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                appendSubtask({ title: "", completed: false });
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeSubtask(index)}
+                            className="text-muted hover:text-red-500"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Links */}

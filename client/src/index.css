@@ -1,18 +1,23 @@
+@import url("https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&family=Inter:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Roboto:wght@300;400;500;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --color-primary: #3b82f6; /* Blue 500 */
-    --color-secondary: #64748b; /* Slate 500 */
-    --color-bg: #f8fafc; /* Slate 50 */
-    --color-card: #ffffff;
-    --color-text: #0f172a; /* Slate 900 */
-    --color-muted: #94a3b8; /* Slate 400 */
-    --color-border: #e2e8f0; /* Slate 200 */
-  }
+:root {
+  /* Default Font */
+  --font-primary: "Inter", sans-serif;
 
+  --color-primary: #3b82f6; /* Blue 500 */
+  --color-secondary: #64748b; /* Slate 500 */
+  --color-bg: #f8fafc; /* Slate 50 */
+  --color-card: #ffffff;
+  --color-text: #0f172a; /* Slate 900 */
+  --color-muted: #94a3b8; /* Slate 400 */
+  --color-border: #e2e8f0; /* Slate 200 */
+}
+
+@layer base {
   [data-theme="calm"] {
     --color-primary: #8b5cf6; /* Violet 500 */
     --color-secondary: #94a3b8;

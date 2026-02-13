@@ -40,6 +40,27 @@ const todoSchema = new mongoose.Schema(
         url: String,
       },
     ],
+    subtasks: [
+      {
+        title: String,
+        completed: {
+          type: Boolean,
+          default: false,
+        },
+      },
+    ],
+    textColor: {
+      type: String,
+      default: "#000000", // Default black/dark, but UI might override based on theme
+    },
+    goalTime: {
+      type: Number, // in minutes
+      default: 0,
+    },
+    timeSpent: {
+      type: Number, // in minutes
+      default: 0,
+    },
     completed: {
       type: Boolean,
       default: false,

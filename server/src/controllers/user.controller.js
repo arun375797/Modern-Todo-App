@@ -12,10 +12,30 @@ const updatePreferences = asyncHandler(async (req, res) => {
     throw new Error("User not found");
   }
 
-  user.preferences = {
-    ...user.preferences,
-    ...req.body,
-  };
+  // Properly update nested fields
+  if (req.body.theme) user.preferences.theme = req.body.theme;
+  if (req.body.font) user.preferences.font = req.body.font;
+  // Use hasOwnProperty to allow setting empty string
+  if (Object.prototype.hasOwnProperty.call(req.body, "textColor")) {
+    user.preferences.textColor = req.body.textColor;
+  }
+
+  if (req.body.background) {
+    if (req.body.background.type)
+      user.preferences.background.type = req.body.background.type;
+    if (req.body.background.value !== undefined)
+      user.preferences.background.value = req.body.background.value;
+  }
+
+  if (req.body.overlay) {
+    if (req.body.overlay.dim !== undefined)
+      user.preferences.overlay.dim = req.body.overlay.dim;
+    if (req.body.overlay.blur !== undefined)
+      user.preferences.overlay.blur = req.body.overlay.blur;
+  }
+
+  // Mark modified to ensure save (sometimes needed for mixed types/deep nesting)
+  user.markModified("preferences");
 
   await user.save();
   res.status(200).json(user.preferences);

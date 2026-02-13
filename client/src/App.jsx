@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import AllTodos from "./pages/AllTodos";
+import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
 import Layout from "./components/Layout";
 
@@ -49,6 +50,7 @@ function App() {
             <Route path="/" element={<Navigate to="/app/today" replace />} />
             <Route path="/app/today" element={<Dashboard />} />
             <Route path="/app/all" element={<AllTodos />} />
+            <Route path="/app/calendar" element={<Calendar />} />
             <Route path="/app/settings" element={<Settings />} />
           </Route>
         </Route>

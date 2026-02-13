@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import {
@@ -8,26 +8,34 @@ import {
   LogOut,
   Menu,
   X,
+  Target,
+  Calendar,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import FocusMode from "./FocusMode";
 
-const Layout = ({ children }) => {
+const Layout = () => {
   const { user, logout } = useAuthStore();
-  const location = useLocation();
+  const { pathname } = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
   const navItems = [
     { label: "Today", path: "/app/today", icon: LayoutDashboard },
+    { label: "Calendar", path: "/app/calendar", icon: Calendar },
     { label: "All Todos", path: "/app/all", icon: ListTodo },
     { label: "Settings", path: "/app/settings", icon: Settings },
   ];
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => pathname === path;
 
   // Background style if user has image
   const bgStyle =
-    user?.preferences?.background?.type === "upload" ||
-    user?.preferences?.background?.type === "preset"
+    user?.preferences?.background?.type === "upload"
       ? {
           backgroundImage: `url(${user.preferences.background.value})`,
           backgroundSize: "cover",
@@ -35,16 +43,18 @@ const Layout = ({ children }) => {
         }
       : {};
 
-  const overlayStyle = user?.preferences?.overlay
-    ? {
-        backgroundColor: `rgba(0,0,0,${user.preferences.overlay.dim || 0})`,
-        backdropFilter: `blur(${user.preferences.overlay.blur || 0}px)`,
-      }
-    : {};
+  const overlayStyle =
+    user?.preferences?.background?.type === "upload"
+      ? {
+          backgroundColor: `rgba(0,0,0,${user.preferences.overlay?.dim || 0})`,
+          backdropFilter: `blur(${user.preferences.overlay?.blur || 0}px)`,
+        }
+      : {};
 
   return (
     <div className="flex h-screen w-full relative" style={bgStyle}>
-      {/* Overlay */}
+      <FocusMode />
+      {/* Background Overlay */}
       <div
         className="absolute inset-0 z-0 pointer-events-none"
         style={overlayStyle}
