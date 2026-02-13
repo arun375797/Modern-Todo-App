@@ -1,13 +1,13 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "/api/v1", // Proxy handles this in Vite
+  baseURL: import.meta.env.VITE_API_URL || "/api/v1", // Use env var in production, proxy in dev
 });
 
 // Add a request interceptor to add the JWT token to every request
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token"); // Simplest generic storage, standard pattern
+    const token = localStorage.getItem("token");
     if (token) {
       config.headers["Authorization"] = `Bearer ${token}`;
     }

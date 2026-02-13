@@ -48,6 +48,7 @@ const Calendar = () => {
   };
 
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dayNamesShort = ["S", "M", "T", "W", "T", "F", "S"];
 
   const handleDayClick = (day) => {
     setSelectedDate(day);
@@ -60,49 +61,50 @@ const Calendar = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto pb-20 h-[calc(100vh-140px)] flex flex-col">
-      <div className="flex items-center justify-between mb-6">
+    <div className="max-w-7xl mx-auto pb-20 h-[calc(100vh-100px)] md:h-[calc(100vh-140px)] flex flex-col px-2 md:px-0">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-3 md:mb-6 gap-2 md:gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-text">Calendar</h1>
-          <p className="text-muted">Plan your schedule.</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-text">Calendar</h1>
+          <p className="text-muted text-xs md:text-sm">Plan your schedule.</p>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4 w-full md:w-auto">
           <button
             onClick={jumpToToday}
-            className="text-sm font-medium text-primary hover:underline"
+            className="text-xs md:text-sm font-medium text-primary hover:underline"
           >
             Today
           </button>
-          <div className="flex items-center bg-card rounded-xl border border-border shadow-sm">
+          <div className="flex items-center bg-card rounded-xl border border-border shadow-sm flex-1 md:flex-initial">
             <button
               onClick={prevMonth}
-              className="p-2 hover:bg-muted/10 rounded-l-xl text-text"
+              className="p-1.5 md:p-2 hover:bg-muted/10 rounded-l-xl text-text"
             >
-              <ChevronLeft size={20} />
+              <ChevronLeft size={18} className="md:w-5 md:h-5" />
             </button>
-            <div className="px-4 font-semibold text-text min-w-[140px] text-center">
+            <div className="px-2 md:px-4 font-semibold text-text text-sm md:text-base min-w-[120px] md:min-w-[140px] text-center">
               {format(currentDate, "MMMM yyyy")}
             </div>
             <button
               onClick={nextMonth}
-              className="p-2 hover:bg-muted/10 rounded-r-xl text-text"
+              className="p-1.5 md:p-2 hover:bg-muted/10 rounded-r-xl text-text"
             >
-              <ChevronRight size={20} />
+              <ChevronRight size={18} className="md:w-5 md:h-5" />
             </button>
           </div>
         </div>
       </div>
 
-      <div className="bg-card rounded-2xl border border-border shadow-sm flex-1 flex flex-col overflow-hidden">
+      <div className="bg-card rounded-xl md:rounded-2xl border border-border shadow-sm flex-1 flex flex-col overflow-hidden">
         {/* Days Header */}
         <div className="grid grid-cols-7 border-b border-border bg-muted/5">
-          {dayNames.map((day) => (
+          {dayNames.map((day, idx) => (
             <div
               key={day}
-              className="py-3 text-center text-sm font-medium text-muted"
+              className="py-2 md:py-3 text-center text-xs md:text-sm font-medium text-muted"
             >
-              {day}
+              <span className="hidden md:inline">{day}</span>
+              <span className="md:hidden">{dayNamesShort[idx]}</span>
             </div>
           ))}
         </div>
@@ -118,13 +120,13 @@ const Calendar = () => {
               <div
                 key={day.toString()}
                 onClick={() => handleDayClick(day)}
-                className={`border-b border-r border-border p-2 min-h-[100px] flex flex-col transition-colors cursor-pointer group hover:bg-primary/5 ${
+                className={`border-b border-r border-border p-1.5 md:p-2 min-h-[80px] md:min-h-[100px] flex flex-col transition-colors cursor-pointer group hover:bg-primary/5 ${
                   !isCurrentMonth ? "bg-muted/5 text-muted" : "bg-card"
                 }`}
               >
-                <div className="flex justify-between items-start mb-1">
+                <div className="flex justify-between items-start mb-1 md:mb-1">
                   <span
-                    className={`text-sm w-7 h-7 flex items-center justify-center rounded-full font-medium ${
+                    className={`text-sm md:text-sm w-6 h-6 md:w-7 md:h-7 flex items-center justify-center rounded-full font-medium ${
                       isDayToday
                         ? "bg-primary text-white"
                         : !isCurrentMonth
@@ -134,13 +136,38 @@ const Calendar = () => {
                   >
                     {format(day, "d")}
                   </span>
-                  <button className="opacity-0 group-hover:opacity-100 text-primary hover:bg-primary/10 p-1 rounded transition-all">
+                  <button className="hidden md:block opacity-0 group-hover:opacity-100 text-primary hover:bg-primary/10 p-1 rounded transition-all">
                     <Plus size={14} />
                   </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto space-y-1 custom-scrollbar">
-                  {dayTodos.map((todo) => (
+                {/* Mobile: Show dots only */}
+                <div className="flex-1 flex md:hidden items-start pt-1">
+                  {dayTodos.length > 0 && (
+                    <div className="flex gap-1 flex-wrap">
+                      {dayTodos.slice(0, 3).map((todo) => (
+                        <div
+                          key={todo._id}
+                          className="w-1.5 h-1.5 rounded-full"
+                          style={{
+                            backgroundColor: todo.completed
+                              ? "#94a3b8"
+                              : todo.color,
+                          }}
+                        />
+                      ))}
+                      {dayTodos.length > 3 && (
+                        <span className="text-[8px] text-muted">
+                          +{dayTodos.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Desktop: Show todo list */}
+                <div className="hidden md:flex flex-1 overflow-y-auto space-y-1 custom-scrollbar flex-col">
+                  {dayTodos.slice(0, 3).map((todo) => (
                     <div
                       key={todo._id}
                       className={`text-[10px] px-1.5 py-0.5 rounded truncate font-medium border-l-2 ${
@@ -160,7 +187,7 @@ const Calendar = () => {
                   ))}
                   {dayTodos.length > 3 && (
                     <div className="text-[10px] text-muted pl-1">
-                      + {dayTodos.length - 3} more
+                      +{dayTodos.length - 3}
                     </div>
                   )}
                 </div>

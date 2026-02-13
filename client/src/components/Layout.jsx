@@ -64,7 +64,7 @@ const Layout = () => {
       <aside className="hidden md:flex w-64 flex-col bg-card/90 backdrop-blur-sm border-r border-border z-10 glass-panel">
         <div className="p-6">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-            Antigravity
+            MyTodo
           </h1>
         </div>
 
@@ -109,7 +109,7 @@ const Layout = () => {
 
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-card/90 backdrop-blur-md border-b border-border z-20 flex items-center justify-between px-4">
-        <span className="text-xl font-bold text-primary">Antigravity</span>
+        <span className="text-xl font-bold text-primary">MyTodo</span>
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className="p-2"

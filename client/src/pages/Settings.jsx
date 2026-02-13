@@ -54,7 +54,7 @@ const Settings = () => {
           <div>
             <h2 className="text-xl font-bold text-text">Appearance</h2>
             <p className="text-muted text-sm">
-              Customize how Antigravity looks for you.
+              Customize how MyTodo looks for you.
             </p>
           </div>
         </div>
