@@ -42,8 +42,8 @@ const Settings = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-20">
-      <h1 className="text-3xl font-bold text-text mb-8">Settings</h1>
+    <div className="max-w-4xl mx-auto space-y-8 pb-20 use-theme-colors">
+      <h1 className="text-3xl font-bold mb-8">Settings</h1>
 
       {/* Theme Section */}
       <section className="bg-card rounded-2xl p-6 shadow-sm border border-border">
@@ -128,6 +128,54 @@ const Settings = () => {
               Reset to Theme
             </button>
           </div>
+        </div>
+      </section>
+
+      {/* Alarm Sound Section */}
+      <section className="bg-card rounded-2xl p-6 shadow-sm border border-border">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-primary/10 rounded-lg text-primary">
+            <span className="text-xl font-bold">🔔</span>
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-text">Focus Alarm</h2>
+            <p className="text-muted text-sm">
+              Choose the sound that plays when your timer finishes.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { id: "beep", name: "Beep" },
+            { id: "bell", name: "Bell" },
+            { id: "digital", name: "Digital" },
+            { id: "none", name: "None" },
+          ].map((sound) => (
+            <button
+              key={sound.id}
+              onClick={() => {
+                updatePreferences({ alarmSound: sound.id });
+                // Preview sound
+                if (sound.id !== "none") {
+                  const audioMap = {
+                    beep: "https://actions.google.com/sounds/v1/alarms/beep_short.ogg",
+                    bell: "https://actions.google.com/sounds/v1/alarms/bugle_tune.ogg",
+                    digital:
+                      "https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg",
+                  };
+                  new Audio(audioMap[sound.id]).play().catch(() => {});
+                }
+              }}
+              className={`p-4 rounded-xl border text-center transition-all ${
+                (user?.preferences?.alarmSound || "beep") === sound.id
+                  ? "border-primary bg-primary/5 text-primary font-bold ring-1 ring-primary"
+                  : "border-border hover:border-muted hover:bg-muted/5"
+              }`}
+            >
+              {sound.name}
+            </button>
+          ))}
         </div>
       </section>
 

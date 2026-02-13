@@ -1,21 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTodoStore } from "../store/todoStore";
-import {
-  X,
-  Play,
-  Pause,
-  CheckCircle2,
-  RotateCcw,
-  Minimize2,
-} from "lucide-react";
+import { useAuthStore } from "../store/authStore";
+import { X, Play, Pause, CheckCircle2, RotateCcw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 
 const FocusMode = () => {
   const { activeFocusTask, clearFocusTask, updateTodo } = useTodoStore();
+  const { user } = useAuthStore();
   const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes
   const [isActive, setIsActive] = useState(false);
   const [mode, setMode] = useState("focus"); // 'focus' or 'break'
+  const alarmTimeoutRef = useRef(null);
 
   // Timer Tick
   useEffect(() => {
@@ -26,7 +22,6 @@ const FocusMode = () => {
       }, 1000);
     } else if (timeLeft === 0) {
       setIsActive(false);
-      // Optional: Play sound here
     }
     return () => clearInterval(interval);
   }, [isActive, timeLeft]);
@@ -37,27 +32,60 @@ const FocusMode = () => {
       setTimeLeft(25 * 60);
       setIsActive(false);
       setMode("focus");
+    } else {
+      setIsActive(false);
     }
   }, [activeFocusTask]);
 
-  // Goal Tracking: Update timeSpent (visual/local tracking could be added here)
+  const updateProgress = async () => {
+    if (!activeFocusTask) return;
+    // Add 25 mins when a focus session completes
+    const newTimeSpent = (activeFocusTask.timeSpent || 0) + 25;
+    await updateTodo(activeFocusTask._id, { timeSpent: newTimeSpent });
+  };
+
+  // Auto-update progress and play alarm when timer finishes
   useEffect(() => {
-    let interval = null;
-    if (isActive && mode === "focus") {
-      interval = setInterval(() => {
-        // We generally trust the main timer above for 'timeLeft'.
-        // To sync with backend strictly, we'd need more complex logic.
-        // For now, we rely on 'updateProgress' when timer hits 0.
-      }, 1000);
+    if (timeLeft === 0 && isActive === false) {
+      if (mode === "focus") {
+        updateProgress();
+      }
+
+      // Play alarm based on preference for 10 seconds
+      const soundPref = user?.preferences?.alarmSound || "beep";
+      if (soundPref !== "none") {
+        const audioMap = {
+          beep: "https://actions.google.com/sounds/v1/alarms/beep_short.ogg",
+          bell: "https://actions.google.com/sounds/v1/alarms/bugle_tune.ogg",
+          digital:
+            "https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg",
+        };
+
+        const audioUrl = audioMap[soundPref] || audioMap["beep"];
+        const audio = new Audio(audioUrl);
+        audio.loop = true; // Loop the audio
+
+        audio.play().catch((e) => console.error("Audio play failed", e));
+
+        // Stop after 10 seconds
+        alarmTimeoutRef.current = setTimeout(() => {
+          audio.pause();
+          audio.currentTime = 0;
+        }, 10000);
+      }
     }
-    return () => clearInterval(interval);
-  }, [isActive, mode]);
 
-  if (!activeFocusTask) return null;
+    // Cleanup on unmount or when dependencies change
+    return () => {
+      if (alarmTimeoutRef.current) {
+        clearTimeout(alarmTimeoutRef.current);
+      }
+    };
+  }, [timeLeft, isActive, mode, user]);
 
-  // Stats Calculation
+  // Stats Calculation (Safe access)
   const stats =
-    activeFocusTask.goalTime > 0
+    activeFocusTask?.goalTime > 0
       ? {
           progress: Math.min(
             100,
@@ -88,13 +116,8 @@ const FocusMode = () => {
     setTimeLeft(newMode === "focus" ? 25 * 60 : 5 * 60);
   };
 
-  const updateProgress = async () => {
-    // Add 25 mins when a focus session completes
-    const newTimeSpent = (activeFocusTask.timeSpent || 0) + 25;
-    await updateTodo(activeFocusTask._id, { timeSpent: newTimeSpent });
-  };
-
   const handleComplete = async () => {
+    if (!activeFocusTask) return;
     await updateTodo(activeFocusTask._id, { completed: true });
     confetti({
       particleCount: 150,
@@ -106,20 +129,14 @@ const FocusMode = () => {
     }, 1500);
   };
 
-  // Auto-update progress when timer finishes focus session
-  // We use a separate useEffect to watch 'timeLeft' and 'mode'
-  // ensuring this runs only when the timer actually hits 0 naturally.
-  useEffect(() => {
-    if (timeLeft === 0 && mode === "focus") {
-      updateProgress();
-    }
-  }, [timeLeft, mode]); // activeFocusTask dependencies might trigger loops, so better keep it minimal
-
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins < 10 ? "0" : ""}${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
+
+  // Early return MUST happen after all hooks
+  if (!activeFocusTask) return null;
 
   return (
     <AnimatePresence>

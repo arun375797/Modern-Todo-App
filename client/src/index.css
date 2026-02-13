@@ -70,3 +70,19 @@
 .rules-scroll::-webkit-scrollbar-thumb {
   @apply bg-gray-300 rounded-full dark:bg-gray-600;
 }
+
+/* Force theme colors (ignore global text color override) */
+.use-theme-colors,
+.use-theme-colors * {
+  color: var(--color-text) !important;
+}
+
+.use-theme-colors .text-muted,
+.use-theme-colors .text-muted * {
+  color: var(--color-muted) !important;
+}
+
+.use-theme-colors .text-primary,
+.use-theme-colors .text-primary * {
+  color: var(--color-primary) !important;
+}

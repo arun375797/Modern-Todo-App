@@ -49,6 +49,10 @@ const userSchema = new mongoose.Schema(
         type: String,
         default: "",
       },
+      alarmSound: {
+        type: String,
+        default: "beep", // beep, bell, digital, none
+      },
     },
   },
   {

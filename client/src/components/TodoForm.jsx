@@ -283,7 +283,7 @@ const TodoForm = ({ isOpen, closeModal, initialData = null }) => {
                         <div key={field.id} className="flex gap-2 items-center">
                           <div className="mt-1.5 w-2 h-2 rounded-full bg-muted/30" />
                           <input
-                            placeholder={`Step ${index + 1}`}
+                            placeholder={`Sub task ${index + 1}`}
                             className="flex-1 rounded-lg border border-border bg-bg px-2 py-1 text-sm focus:ring-1 focus:ring-primary focus:outline-none"
                             {...register(`subtasks.${index}.title`)}
                             onKeyDown={(e) => {
