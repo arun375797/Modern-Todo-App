@@ -25,69 +25,56 @@ connectDB();
 // Middleware
 app.use(
   helmet({
-    crossOriginResourcePolicy: false, // Allow loading images from /uploads
+    crossOriginResourcePolicy: false,
   }),
 );
 
-// CORS configuration
-// Parse FRONTEND_URL (supports comma-separated list)
-const frontendUrlEnv = process.env.FRONTEND_URL || "";
-const envOrigins = frontendUrlEnv
-  .split(",")
-  .map((url) => url.trim())
-  .filter(Boolean);
+function normalizeOrigin(origin) {
+  return (origin || "").replace(/\/$/, "");
+}
 
+function parseAllowedFromEnv(value) {
+  const v = (value || "").trim();
+  if (!v) return [];
+  if (v === "*") return ["*"];
+  return v
+    .split(",")
+    .map((s) => normalizeOrigin(s.trim()))
+    .filter(Boolean);
+}
+
+// CORS configuration
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
-  "https://modern-todo-app-ten.vercel.app", // Production Vercel URL
-  ...envOrigins, // Additional URLs from environment
-].filter(Boolean); // Remove any undefined values
+];
 
-// Normalize origin (remove trailing slash)
-const normalizeOrigin = (origin) => {
-  if (!origin) return origin;
-  return origin.replace(/\/$/, "");
-};
+// Add any explicit frontends from env (comma-separated)
+const envAllowed = parseAllowedFromEnv(process.env.FRONTEND_URL);
+allowedOrigins.push(...envAllowed);
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, Postman, etc.)
-      if (!origin) return callback(null, true);
+      const o = normalizeOrigin(origin);
 
-      // Normalize the origin
-      const normalizedOrigin = normalizeOrigin(origin);
+      // Allow requests with no origin (Postman, server-to-server, etc.)
+      if (!o) return callback(null, true);
 
-      // Check if FRONTEND_URL is "*" (allow all for testing)
-      if (frontendUrlEnv === "*") {
+      // Allow all during setup if FRONTEND_URL="*"
+      if (envAllowed.includes("*")) return callback(null, true);
+
+      // Allow Vercel preview deployments and Render frontends
+      if (o.endsWith(".vercel.app") || o.endsWith(".onrender.com")) {
         return callback(null, true);
       }
 
-      // Allow Vercel preview deployments (e.g., https://todo-xyz-username.vercel.app)
-      if (origin.includes(".vercel.app")) {
-        return callback(null, true);
-      }
+      if (allowedOrigins.includes(o)) return callback(null, true);
 
-      // Allow Render deployments (e.g., https://myapp.onrender.com)
-      if (origin.includes(".onrender.com")) {
-        return callback(null, true);
-      }
-
-      // Check against normalized allowed origins
-      const isAllowed = allowedOrigins.some(
-        (allowed) => normalizeOrigin(allowed) === normalizedOrigin,
-      );
-
-      if (isAllowed) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
+      return callback(new Error(`Not allowed by CORS: ${o}`));
     },
-    credentials: false, // Changed to false - we use JWT in headers, not cookies
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    // This app uses Authorization: Bearer <token>, so cookies are not required.
+    credentials: false,
   }),
 );
 

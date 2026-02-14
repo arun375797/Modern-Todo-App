@@ -1,125 +1,166 @@
-# Quick Deployment Steps
+# Deployment Configuration Guide
 
-## 🚀 Deploy Worker API to Cloudflare
+## Frontend (Vercel)
 
-### Step 1: Update FRONTEND_URL in wrangler.toml
+### Environment Variables
 
-Edit `worker-api/wrangler.toml`:
+Set the following in Vercel → Settings → Environment Variables:
 
-```toml
-# For production (recommended):
-FRONTEND_URL = "https://modern-todo-app-ten.vercel.app"
-
-# For multiple domains:
-# FRONTEND_URL = "https://modern-todo-app-ten.vercel.app,https://yourcustomdomain.com"
-
-# For testing only (NOT for production!):
-# FRONTEND_URL = "*"
+```
+VITE_API_URL=https://modern-todo-app-o2cu.onrender.com
 ```
 
-### Step 2: Deploy to Cloudflare
+**Important:**
 
-```bash
-cd worker-api
-npx wrangler deploy
-```
+- Do NOT include `/api/v1` in the URL - it's added automatically by the axios config
+- Apply to: Production, Preview, Development
 
-### Step 3: Verify Deployment
+### After Setting Environment Variables
 
-Check the deployment URL (should be `https://antigravity-api.arun375797.workers.dev`)
-
-Test health endpoint:
-
-```bash
-curl https://antigravity-api.arun375797.workers.dev/health
-```
+1. Go to Deployments tab
+2. Click "..." on the latest deployment
+3. Click "Redeploy"
+4. Check "Use existing Build Cache" (optional)
+5. Click "Redeploy"
 
 ---
 
-## 🌐 Deploy Frontend to Vercel
+## Backend (Render)
 
-### Step 1: Verify API URL
+### Environment Variables
 
-Check `client/.env`:
-
-```env
-VITE_API_URL=https://antigravity-api.arun375797.workers.dev
-```
-
-### Step 2: Build and Deploy
+Set the following in Render → Environment:
 
 ```bash
-cd client
-npm run build
+# Database
+MONGO_URI=mongodb+srv://arun3757979_db_user:Life2305@cluster0.bhbhtqi.mongodb.net/?appName=Cluster0
+
+# JWT
+JWT_SECRET=mysecretkey
+JWT_EXPIRES_IN=7d
+
+# Environment
+NODE_ENV=production
+
+# Frontend URL (your Vercel production URL)
+FRONTEND_URL=https://todo-alpha-topaz.vercel.app
 ```
 
-Then push to GitHub - Vercel will auto-deploy.
+**Important:**
 
-Or deploy manually:
+- Do NOT set `PORT` - Render sets this automatically
+- Set `NODE_ENV=production` (not development)
+- Update `FRONTEND_URL` to match your actual Vercel production URL
+
+### Auto-Deploy
+
+Render automatically deploys when you push to your repository.
+
+---
+
+## Testing the Deployment
+
+### 1. Test Backend Health
+
+Open in browser:
+
+```
+https://modern-todo-app-o2cu.onrender.com/health
+```
+
+Should return:
+
+```json
+{
+  "status": "ok",
+  "timestamp": "...",
+  "environment": "production"
+}
+```
+
+### 2. Test API Endpoint (should return 400/405, not 404)
+
+```
+https://modern-todo-app-o2cu.onrender.com/api/v1/auth/login
+```
+
+If you get 404, the routes aren't mounted correctly.
+If you get 400/405, the endpoint exists (correct!).
+
+### 3. Test Frontend
+
+Open:
+
+```
+https://todo-alpha-topaz.vercel.app
+```
+
+Open browser console and check:
+
+- Should see: `🔗 API Base URL: https://modern-todo-app-o2cu.onrender.com/api/v1`
+- No CORS errors
+- No 404 errors on login
+
+---
+
+## Troubleshooting
+
+### Login returns 404
+
+**Problem:** Frontend is calling wrong URL
+
+**Check:**
+
+1. Open browser console on deployed site
+2. Look for `🔗 API Base URL:` log
+3. Should show: `https://modern-todo-app-o2cu.onrender.com/api/v1`
+4. If different, redeploy Vercel after setting env var
+
+### CORS Error
+
+**Problem:** Backend doesn't allow your frontend origin
+
+**Fix:**
+
+1. Check `FRONTEND_URL` is set correctly in Render
+2. Redeploy backend
+3. Vercel preview deployments (e.g., `https://todo-xyz-username.vercel.app`) are automatically allowed
+
+### PWA Icons Missing
+
+**Problem:** Browser can't find icon files
+
+**Fix:**
+
+- Icons are now SVG-based (in `client/public/icon.svg`)
+- Rebuild frontend: `npm run build`
+- Redeploy to Vercel
+
+---
+
+## Quick Deploy Checklist
+
+### First Time Setup
+
+- [ ] Vercel: Set `VITE_API_URL=https://modern-todo-app-o2cu.onrender.com`
+- [ ] Render: Set `NODE_ENV=production`
+- [ ] Render: Set `FRONTEND_URL=https://todo-alpha-topaz.vercel.app`
+- [ ] Render: Remove `PORT` variable (if set)
+- [ ] Redeploy both services
+
+### After Code Changes
 
 ```bash
-npx vercel --prod
+# Commit and push
+git add .
+git commit -m "Your commit message"
+git push
 ```
 
-### Step 3: Test in Production
+- Backend (Render): Auto-deploys on push
+- Frontend (Vercel): Auto-deploys on push
 
-1. Visit your Vercel URL: `https://modern-todo-app-ten.vercel.app`
-2. Open browser DevTools → Network tab
-3. Try logging in with Google
-4. Check for CORS errors (should be none!)
-5. Verify response headers include:
-   - `Access-Control-Allow-Origin: https://modern-todo-app-ten.vercel.app`
-   - `Access-Control-Allow-Credentials: false`
+### After Environment Variable Changes
 
----
-
-## 🔍 Troubleshooting
-
-### Still seeing CORS errors?
-
-1. **Check Worker logs:**
-
-   ```bash
-   cd worker-api
-   npx wrangler tail --format=pretty
-   ```
-
-2. **Verify FRONTEND_URL:**
-   - Make sure it matches your Vercel deployment URL exactly
-   - No trailing slashes: ✅ `https://site.com` ❌ `https://site.com/`
-
-3. **Check browser console:**
-   - Look for the actual origin being sent
-   - Compare with `FRONTEND_URL` in wrangler.toml
-
-### Getting 404 errors?
-
-This is NOT a CORS issue! Check:
-
-- Are you calling the correct endpoint? (e.g., `/api/v1/auth/login`)
-- Is the route defined in the Worker API?
-
-### Getting 500 errors?
-
-This is NOT a CORS issue! Check:
-
-- Worker logs: `npx wrangler tail`
-- Are all secrets set? (MONGO_URI, JWT_SECRET, etc.)
-- Is the database accessible?
-
----
-
-## ✅ Final Checklist
-
-- [ ] Updated `FRONTEND_URL` in `worker-api/wrangler.toml`
-- [ ] Deployed Worker API: `npx wrangler deploy`
-- [ ] Verified `VITE_API_URL` in `client/.env`
-- [ ] Built frontend: `npm run build`
-- [ ] Deployed to Vercel
-- [ ] Tested login flow
-- [ ] No CORS errors in browser console
-- [ ] All API calls working
-
----
-
-**Need Help?** See `CORS_FIX_GUIDE.md` for detailed explanations.
+- Vercel: Manual redeploy required
+- Render: Manual redeploy required (or push a commit)
