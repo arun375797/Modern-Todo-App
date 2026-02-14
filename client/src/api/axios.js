@@ -1,7 +1,15 @@
 import axios from "axios";
 
+// In production: VITE_API_URL = https://modern-todo-app-o2cu.onrender.com (no /api/v1)
+// In development: uses proxy via /api/v1
+const baseURL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api/v1`
+  : "/api/v1";
+
+console.log("🔗 API Base URL:", baseURL);
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "/api/v1", // Use env var in production, proxy in dev
+  baseURL,
 });
 
 // Add a request interceptor to add the JWT token to every request

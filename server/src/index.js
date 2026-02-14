@@ -29,15 +29,30 @@ app.use(
   }),
 );
 
-// CORS configuration for production
+// CORS configuration
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  process.env.FRONTEND_URL, // Set this in Render to your Vercel URL
+];
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:5173",
-      "https://todo-alpha-topaz.vercel.app",
-      process.env.FRONTEND_URL || "http://localhost:3000",
-    ],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, Postman, etc.)
+      if (!origin) return callback(null, true);
+
+      // Allow Vercel preview deployments (e.g., https://todo-xyz-username.vercel.app)
+      if (origin.includes(".vercel.app")) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   }),
 );
