@@ -15,6 +15,7 @@ import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
 import InstallApp from "./pages/InstallApp";
 import Layout from "./components/Layout";
+import OfflineBanner from "./components/OfflineBanner";
 
 const ProtectedRoute = () => {
   const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
@@ -42,6 +43,7 @@ function App() {
 
   return (
     <Router>
+      <OfflineBanner />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
