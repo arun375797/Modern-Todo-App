@@ -63,12 +63,29 @@ app.route("/api/v1/users", userRoutes);
 // Global error handler
 app.onError((err, c) => {
   console.error("Unhandled error:", err);
+
+  // Ensure CORS headers are present even on error
+  // so the frontend can read the error message
+  const headers = {
+    "Access-Control-Allow-Origin": (() => {
+      const origin = c.req.header("Origin");
+      if (!origin) return "*";
+      if (origin.includes(".vercel.app") || origin.includes("localhost"))
+        return origin;
+      return origin; // Fallback to allowing the origin
+    })(),
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Credentials": "true",
+  };
+
   return c.json(
     {
       message: err.message || "Internal Server Error",
       stack: c.env.NODE_ENV === "production" ? undefined : err.stack,
     },
     500,
+    headers,
   );
 });
 
