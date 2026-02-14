@@ -34,9 +34,8 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      "todo-alpha-topaz.vercel.app",
-
       "http://localhost:5173",
+      "https://todo-alpha-topaz.vercel.app",
       process.env.FRONTEND_URL || "http://localhost:3000",
     ],
     credentials: true,
