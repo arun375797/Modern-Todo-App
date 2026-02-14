@@ -9,11 +9,41 @@ import userRoutes from "./routes/users.js";
 const app = new Hono();
 
 // Helper function to get CORS origin
-function getCorsOrigin(origin) {
+function getCorsOrigin(origin, env) {
   if (!origin) return null;
 
-  // Allow Vercel preview deployments
+  // Get FRONTEND_URL from environment (supports comma-separated list)
+  const frontendUrl = env?.FRONTEND_URL || "";
+
+  // If FRONTEND_URL is "*", allow all origins (for testing only!)
+  if (frontendUrl === "*") {
+    return origin;
+  }
+
+  // Parse comma-separated origins from FRONTEND_URL
+  const allowedOrigins = frontendUrl
+    .split(",")
+    .map((url) => url.trim())
+    .filter(Boolean);
+
+  // Normalize origin (remove trailing slash)
+  const normalizedOrigin = origin.replace(/\/$/, "");
+
+  // Check if origin is in the explicit allowlist
+  for (const allowed of allowedOrigins) {
+    const normalizedAllowed = allowed.replace(/\/$/, "");
+    if (normalizedOrigin === normalizedAllowed) {
+      return origin;
+    }
+  }
+
+  // Allow Vercel preview deployments (e.g., https://todo-xyz-username.vercel.app)
   if (origin.includes(".vercel.app")) {
+    return origin;
+  }
+
+  // Allow Render deployments (e.g., https://myapp.onrender.com)
+  if (origin.includes(".onrender.com")) {
     return origin;
   }
 
@@ -26,23 +56,21 @@ function getCorsOrigin(origin) {
     return origin;
   }
 
-  // Fallback to allowing the origin if it exists (since we use credentials: true, we must be specific)
-  return origin;
+  // If not matched, return null (will be rejected)
+  return null;
 }
 
-// CORS configuration
+// CORS configuration - MUST be applied before routes
 app.use(
-  "/*",
+  "*",
   cors({
-    origin: (origin) => getCorsOrigin(origin),
-    allowHeaders: [
-      "Content-Type",
-      "Authorization",
-      "X-Requested-With",
-      "Accept",
-    ],
+    origin: (origin, c) => {
+      const allowedOrigin = getCorsOrigin(origin, c.env);
+      return allowedOrigin || false; // Return false instead of null to reject
+    },
+    allowHeaders: ["Content-Type", "Authorization"],
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    credentials: true,
+    credentials: false, // Changed to false - we use JWT in headers, not cookies
     maxAge: 86400,
   }),
 );
@@ -94,29 +122,17 @@ app.onError((err, c) => {
   // Ensure CORS headers are present even on error
   // so the frontend can read the error message
   const origin = c.req.header("Origin");
-  let allowedOrigin = getCorsOrigin(origin);
+  const allowedOrigin = getCorsOrigin(origin, c.env);
 
-  // If we have an origin but getCorsOrigin returned null, use the origin anyway
-  // (This shouldn't happen for valid origins, but be defensive)
-  if (origin && !allowedOrigin) {
-    allowedOrigin = origin;
-  }
-
-  // When credentials: true, we cannot use "*", must use specific origin
   const headers = {
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Allow-Credentials": "false",
   };
 
   // Set Access-Control-Allow-Origin if we have a valid origin
-  // When credentials: true, we cannot use "*"
   if (allowedOrigin) {
     headers["Access-Control-Allow-Origin"] = allowedOrigin;
-  } else if (origin) {
-    // Fallback: if origin exists but wasn't allowed, still set it to avoid CORS error
-    // (This allows the browser to at least see the error message)
-    headers["Access-Control-Allow-Origin"] = origin;
   }
 
   return c.json(
@@ -133,23 +149,16 @@ app.onError((err, c) => {
 app.notFound((c) => {
   // Add CORS headers to 404 responses
   const origin = c.req.header("Origin");
-  let allowedOrigin = getCorsOrigin(origin);
-
-  // If we have an origin but getCorsOrigin returned null, use the origin
-  if (origin && !allowedOrigin) {
-    allowedOrigin = origin;
-  }
+  const allowedOrigin = getCorsOrigin(origin, c.env);
 
   const headers = {
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Allow-Credentials": "false",
   };
 
   if (allowedOrigin) {
     headers["Access-Control-Allow-Origin"] = allowedOrigin;
-  } else if (origin) {
-    headers["Access-Control-Allow-Origin"] = origin;
   }
 
   return c.json({ message: "Not Found" }, 404, headers);

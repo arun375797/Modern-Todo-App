@@ -30,11 +30,25 @@ app.use(
 );
 
 // CORS configuration
+// Parse FRONTEND_URL (supports comma-separated list)
+const frontendUrlEnv = process.env.FRONTEND_URL || "";
+const envOrigins = frontendUrlEnv
+  .split(",")
+  .map((url) => url.trim())
+  .filter(Boolean);
+
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
-  process.env.FRONTEND_URL, // Set this in Render to your Vercel URL
-];
+  "https://modern-todo-app-ten.vercel.app", // Production Vercel URL
+  ...envOrigins, // Additional URLs from environment
+].filter(Boolean); // Remove any undefined values
+
+// Normalize origin (remove trailing slash)
+const normalizeOrigin = (origin) => {
+  if (!origin) return origin;
+  return origin.replace(/\/$/, "");
+};
 
 app.use(
   cors({
@@ -42,18 +56,38 @@ app.use(
       // Allow requests with no origin (mobile apps, Postman, etc.)
       if (!origin) return callback(null, true);
 
+      // Normalize the origin
+      const normalizedOrigin = normalizeOrigin(origin);
+
+      // Check if FRONTEND_URL is "*" (allow all for testing)
+      if (frontendUrlEnv === "*") {
+        return callback(null, true);
+      }
+
       // Allow Vercel preview deployments (e.g., https://todo-xyz-username.vercel.app)
       if (origin.includes(".vercel.app")) {
         return callback(null, true);
       }
 
-      if (allowedOrigins.includes(origin)) {
+      // Allow Render deployments (e.g., https://myapp.onrender.com)
+      if (origin.includes(".onrender.com")) {
+        return callback(null, true);
+      }
+
+      // Check against normalized allowed origins
+      const isAllowed = allowedOrigins.some(
+        (allowed) => normalizeOrigin(allowed) === normalizedOrigin,
+      );
+
+      if (isAllowed) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
       }
     },
-    credentials: true,
+    credentials: false, // Changed to false - we use JWT in headers, not cookies
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
 
