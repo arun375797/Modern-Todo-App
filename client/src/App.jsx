@@ -14,6 +14,7 @@ import AllTodos from "./pages/AllTodos";
 import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
 import InstallApp from "./pages/InstallApp";
+import FocusTimer from "./pages/FocusTimer";
 import Layout from "./components/Layout";
 import OfflineBanner from "./components/OfflineBanner";
 
@@ -54,6 +55,7 @@ function App() {
             <Route path="/app/today" element={<Dashboard />} />
             <Route path="/app/all" element={<AllTodos />} />
             <Route path="/app/calendar" element={<Calendar />} />
+            <Route path="/app/focus-timer" element={<FocusTimer />} />
             <Route path="/app/settings" element={<Settings />} />
             <Route path="/app/install" element={<InstallApp />} />
           </Route>

@@ -11,6 +11,7 @@ import {
   Target,
   Calendar,
   Smartphone,
+  Timer,
 } from "lucide-react";
 
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,6 +31,7 @@ const Layout = () => {
     { label: "Today", path: "/app/today", icon: LayoutDashboard },
     { label: "Calendar", path: "/app/calendar", icon: Calendar },
     { label: "All Todos", path: "/app/all", icon: ListTodo },
+    { label: "Focus Timer", path: "/app/focus-timer", icon: Timer },
     { label: "Settings", path: "/app/settings", icon: Settings },
     { label: "Install App", path: "/app/install", icon: Smartphone },
   ];
