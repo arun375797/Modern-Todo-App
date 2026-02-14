@@ -64,7 +64,7 @@ const Layout = () => {
       : {};
 
   return (
-    <div className="flex h-screen w-full relative" style={bgStyle}>
+    <div className="flex h-screen w-full relative bg-bg" style={bgStyle}>
       <FocusMode />
       {/* Background Overlay */}
       <div

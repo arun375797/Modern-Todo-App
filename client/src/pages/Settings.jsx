@@ -17,12 +17,18 @@ const THEMES = [
 const Settings = () => {
   const { user, updatePreferences, uploadBackground } = useAuthStore();
   const [uploading, setUploading] = useState(false);
+  const [changingTheme, setChangingTheme] = useState(false);
   const [overlay, setOverlay] = useState(
     user?.preferences?.overlay || { dim: 0, blur: 0 },
   );
 
-  const handleThemeChange = (themeId) => {
-    updatePreferences({ theme: themeId });
+  const handleThemeChange = async (themeId) => {
+    if (changingTheme) return; // Prevent rapid clicks
+    console.log("Changing theme to:", themeId);
+    console.log("Current user preferences:", user?.preferences);
+    setChangingTheme(true);
+    await updatePreferences({ theme: themeId });
+    setChangingTheme(false);
   };
 
   const handleOverlayCommit = (newOverlay) => {
@@ -55,7 +61,7 @@ const Settings = () => {
       </div>
 
       {/* Theme Section */}
-      <section className="bg-card rounded-2xl p-6 shadow-sm border border-border">
+      <section className="bg-card rounded-2xl p-6 shadow-sm border border-border mb-8">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-primary/10 rounded-lg text-primary">
             <Palette size={24} />
@@ -73,7 +79,8 @@ const Settings = () => {
             <button
               key={theme.id}
               onClick={() => handleThemeChange(theme.id)}
-              className={`relative h-24 rounded-xl border-2 transition-all hover:scale-105 active:scale-95 flex items-center justify-center ${theme.color} ${user?.preferences?.theme === theme.id ? "ring-2 ring-primary ring-offset-2" : "border-transparent"}`}
+              disabled={changingTheme}
+              className={`relative h-24 rounded-xl border-2 transition-all hover:scale-105 active:scale-95 flex items-center justify-center ${theme.color} ${user?.preferences?.theme === theme.id ? "ring-2 ring-primary ring-offset-2" : "border-transparent"} ${changingTheme ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               {user?.preferences?.theme === theme.id && (
                 <div className="absolute top-2 right-2 bg-primary text-white rounded-full p-1">
@@ -87,7 +94,7 @@ const Settings = () => {
       </section>
 
       {/* Font Section */}
-      <section className="bg-card rounded-2xl p-6 shadow-sm border border-border">
+      <section className="bg-card rounded-2xl p-6 shadow-sm border border-border mb-8">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-primary/10 rounded-lg text-primary">
             <span className="text-xl font-bold">Aa</span>
@@ -141,7 +148,7 @@ const Settings = () => {
       </section>
 
       {/* Alarm Sound Section */}
-      <section className="bg-card rounded-2xl p-6 shadow-sm border border-border">
+      <section className="bg-card rounded-2xl p-6 shadow-sm border border-border mb-8">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-primary/10 rounded-lg text-primary">
             <span className="text-xl font-bold">🔔</span>

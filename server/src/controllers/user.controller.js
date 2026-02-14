@@ -15,6 +15,7 @@ const updatePreferences = asyncHandler(async (req, res) => {
   // Properly update nested fields
   if (req.body.theme) user.preferences.theme = req.body.theme;
   if (req.body.font) user.preferences.font = req.body.font;
+  if (req.body.alarmSound) user.preferences.alarmSound = req.body.alarmSound;
   // Use hasOwnProperty to allow setting empty string
   if (Object.prototype.hasOwnProperty.call(req.body, "textColor")) {
     user.preferences.textColor = req.body.textColor;

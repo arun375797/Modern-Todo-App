@@ -92,22 +92,20 @@ export const useAuthStore = create(
 
       updatePreferences: async (preferences) => {
         try {
-          const response = await api.put("/users/preferences", preferences);
-          const currentUser = get().user;
-          const updatedUser = {
-            ...currentUser,
-            preferences: { ...currentUser.preferences, ...response.data },
-          };
-          set({ user: updatedUser });
+          console.log("updatePreferences called with:", preferences);
 
+          // Apply theme immediately for instant visual feedback
           if (preferences.theme) {
+            console.log("Setting theme attribute to:", preferences.theme);
             document.documentElement.setAttribute(
               "data-theme",
               preferences.theme,
             );
+            // Force a reflow to ensure the theme is applied
+            document.documentElement.offsetHeight;
           }
 
-          // Update font globally if changed
+          // Apply font immediately if changed
           if (preferences.font) {
             document.documentElement.style.setProperty(
               "--font-primary",
@@ -115,7 +113,7 @@ export const useAuthStore = create(
             );
           }
 
-          // Update text color globally if changed
+          // Apply text color immediately if changed
           if (preferences.textColor) {
             document.documentElement.style.setProperty(
               "--color-text",
@@ -125,8 +123,47 @@ export const useAuthStore = create(
             // Reset if empty
             document.documentElement.style.removeProperty("--color-text");
           }
+
+          // Update state optimistically
+          const currentUser = get().user;
+          const optimisticUser = {
+            ...currentUser,
+            preferences: { ...currentUser.preferences, ...preferences },
+          };
+          set({ user: optimisticUser });
+
+          // Then sync with server
+          const response = await api.put("/users/preferences", preferences);
+          console.log("updatePreferences response:", response.data);
+
+          // Update with server response
+          const finalUser = {
+            ...currentUser,
+            preferences: { ...currentUser.preferences, ...response.data },
+          };
+          set({ user: finalUser });
+
+          toast.success("Settings updated");
         } catch (error) {
+          console.error("updatePreferences error:", error);
           toast.error("Failed to update settings");
+
+          // Revert optimistic update on error
+          const currentUser = get().user;
+          // Reload from server or keep current state
+          try {
+            const response = await api.get("/auth/me");
+            set({ user: response.data });
+            // Reapply theme from server state
+            if (response.data.preferences?.theme) {
+              document.documentElement.setAttribute(
+                "data-theme",
+                response.data.preferences.theme,
+              );
+            }
+          } catch (revertError) {
+            console.error("Failed to revert state:", revertError);
+          }
         }
       },
 
@@ -160,6 +197,16 @@ export const useAuthStore = create(
     {
       name: "auth-storage",
       getStorage: () => localStorage,
+      onRehydrateStorage: () => (state) => {
+        // Apply theme immediately when state is rehydrated from localStorage
+        if (state?.user?.preferences?.theme) {
+          console.log("Rehydrating theme:", state.user.preferences.theme);
+          document.documentElement.setAttribute(
+            "data-theme",
+            state.user.preferences.theme,
+          );
+        }
+      },
     },
   ),
 );
