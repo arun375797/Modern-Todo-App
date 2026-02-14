@@ -36,10 +36,14 @@ const AllTodos = () => {
 
   return (
     <div className="max-w-7xl mx-auto pb-20">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 md:mb-10 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-text">All Tasks</h1>
-          <p className="text-muted mt-1">Manage and organize everything.</p>
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+            All Tasks
+          </h1>
+          <p className="text-muted text-sm md:text-base mt-1">
+            Manage and organize everything.
+          </p>
         </div>
 
         <button

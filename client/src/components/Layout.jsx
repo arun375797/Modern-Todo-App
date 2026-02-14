@@ -167,7 +167,7 @@ const Layout = () => {
       </AnimatePresence>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto relative z-0 pt-16 md:pt-0 p-4 md:p-8">
+      <main className="flex-1 overflow-auto relative z-0 pt-24 md:pt-0 p-6 md:p-8">
         <Outlet />
       </main>
     </div>

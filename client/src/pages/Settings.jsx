@@ -42,8 +42,17 @@ const Settings = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-20 use-theme-colors">
-      <h1 className="text-3xl font-bold mb-8">Settings</h1>
+    <div className="max-w-4xl mx-auto pb-20">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 md:mb-10 gap-2 md:gap-3">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+            Settings
+          </h1>
+          <p className="text-muted text-sm md:text-base mt-1">
+            Customize your experience and preferences.
+          </p>
+        </div>
+      </div>
 
       {/* Theme Section */}
       <section className="bg-card rounded-2xl p-6 shadow-sm border border-border">

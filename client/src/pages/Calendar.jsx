@@ -62,10 +62,14 @@ const Calendar = () => {
 
   return (
     <div className="max-w-7xl mx-auto pb-20 h-[calc(100vh-100px)] md:h-[calc(100vh-140px)] flex flex-col px-2 md:px-0">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-3 md:mb-6 gap-2 md:gap-3">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 md:mb-10 gap-2 md:gap-3 px-1 md:px-0">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-text">Calendar</h1>
-          <p className="text-muted text-xs md:text-sm">Plan your schedule.</p>
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+            Calendar
+          </h1>
+          <p className="text-muted text-sm md:text-base mt-1">
+            Plan and manage your schedule.
+          </p>
         </div>
 
         <div className="flex items-center gap-2 md:gap-4 w-full md:w-auto">

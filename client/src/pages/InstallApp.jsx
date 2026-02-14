@@ -33,12 +33,17 @@ const InstallApp = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-12">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold text-text">Install MyTodo</h1>
-        <p className="text-muted text-lg">
-          Transform this website into a high-performance desktop or mobile app.
-        </p>
+    <div className="max-w-4xl mx-auto pb-20">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 md:mb-10 gap-2 md:gap-3">
+        <div>
+          <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+            Install MyTodo
+          </h1>
+          <p className="text-muted text-sm md:text-base mt-1">
+            Transform this website into a high-performance desktop or mobile
+            app.
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
