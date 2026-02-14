@@ -34,9 +34,17 @@ const Layout = () => {
   const isActive = (path) => pathname === path;
 
   // Background style if user has image
+  const getBgUrl = () => {
+    const val = user?.preferences?.background?.value;
+    if (!val) return "";
+    return val.startsWith("http")
+      ? val
+      : `${import.meta.env.VITE_API_URL || ""}/${val}`;
+  };
+
   const bgStyle = user?.preferences?.background?.value
     ? {
-        backgroundImage: `url(${user.preferences.background.value})`,
+        backgroundImage: `url(${getBgUrl()})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }

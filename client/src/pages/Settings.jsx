@@ -217,7 +217,11 @@ const Settings = () => {
             {user?.preferences?.background?.value && (
               <div className="flex-1 relative rounded-xl overflow-hidden border border-border h-48 group">
                 <img
-                  src={user.preferences.background.value}
+                  src={
+                    user.preferences.background.value?.startsWith("http")
+                      ? user.preferences.background.value
+                      : `${import.meta.env.VITE_API_URL || ""}/${user.preferences.background.value}`
+                  }
                   alt="Current background"
                   className="w-full h-full object-cover"
                 />
