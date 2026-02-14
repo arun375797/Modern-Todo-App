@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import AllTodos from "./pages/AllTodos";
 import Calendar from "./pages/Calendar";
 import Settings from "./pages/Settings";
+import InstallApp from "./pages/InstallApp";
 import Layout from "./components/Layout";
 
 const ProtectedRoute = () => {
@@ -52,6 +53,7 @@ function App() {
             <Route path="/app/all" element={<AllTodos />} />
             <Route path="/app/calendar" element={<Calendar />} />
             <Route path="/app/settings" element={<Settings />} />
+            <Route path="/app/install" element={<InstallApp />} />
           </Route>
         </Route>
 

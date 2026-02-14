@@ -10,7 +10,9 @@ import {
   X,
   Target,
   Calendar,
+  Smartphone,
 } from "lucide-react";
+
 import { motion, AnimatePresence } from "framer-motion";
 import FocusMode from "./FocusMode";
 
@@ -29,6 +31,7 @@ const Layout = () => {
     { label: "Calendar", path: "/app/calendar", icon: Calendar },
     { label: "All Todos", path: "/app/all", icon: ListTodo },
     { label: "Settings", path: "/app/settings", icon: Settings },
+    { label: "Install App", path: "/app/install", icon: Smartphone },
   ];
 
   const isActive = (path) => pathname === path;
