@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { getDB } from "./config/db.js";
 import authRoutes from "./routes/auth.js";
 import todoRoutes from "./routes/todos.js";
 import ruleRoutes from "./routes/rules.js";
@@ -37,13 +38,30 @@ app.use(
   }),
 );
 
-// Health check endpoint
-app.get("/health", (c) => {
-  return c.json({
-    status: "ok",
-    timestamp: new Date().toISOString(),
-    environment: "cloudflare-workers",
-  });
+// Health check endpoint with DB test
+app.get("/health", async (c) => {
+  try {
+    const db = await getDB(c.env);
+    // Simple ping
+    const ping = await db.command({ ping: 1 });
+    return c.json({
+      status: "ok",
+      database: "connected",
+      ping,
+      timestamp: new Date().toISOString(),
+      environment: "cloudflare-workers",
+    });
+  } catch (err) {
+    return c.json(
+      {
+        status: "error",
+        database: "failed",
+        error: err.message,
+        timestamp: new Date().toISOString(),
+      },
+      500,
+    );
+  }
 });
 
 // Root endpoint
