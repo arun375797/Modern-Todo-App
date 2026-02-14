@@ -5,6 +5,41 @@ import { ObjectId } from "mongodb";
 import { getDB } from "../config/db.js";
 import { protect } from "../middleware/auth.js";
 
+// Helper to normalize allowed origins (covers localhost, Render, Vercel)
+function getCorsOrigin(origin) {
+  if (!origin) return null;
+  const o = origin.replace(/\/$/, "");
+  if (
+    o.includes("localhost:3000") ||
+    o.includes("localhost:5173") ||
+    o.includes("localhost:")
+  ) {
+    return o;
+  }
+  if (o.endsWith(".vercel.app") || o.endsWith(".onrender.com")) {
+    return o;
+  }
+  return o;
+}
+
+function addCorsHeaders(c) {
+  const origin = c.req.header("Origin");
+  const allowedOrigin = getCorsOrigin(origin);
+
+  const headers = {
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  };
+
+  if (allowedOrigin) {
+    headers["Access-Control-Allow-Origin"] = allowedOrigin;
+  } else if (origin) {
+    headers["Access-Control-Allow-Origin"] = origin;
+  }
+
+  return headers;
+}
+
 const auth = new Hono();
 
 // Helper: Generate JWT
@@ -30,7 +65,7 @@ auth.post("/google", async (c) => {
     const { token } = await c.req.json();
 
     if (!token) {
-      return c.json({ message: "No token provided" }, 400);
+      return c.json({ message: "No token provided" }, 400, addCorsHeaders(c));
     }
 
     // Verify Google Token
@@ -44,7 +79,7 @@ auth.post("/google", async (c) => {
         "Google token verification failed:",
         await googleRes.text(),
       );
-      return c.json({ message: "Invalid Google token" }, 401);
+      return c.json({ message: "Invalid Google token" }, 401, addCorsHeaders(c));
     }
 
     const googleData = await googleRes.json();
@@ -146,14 +181,18 @@ auth.post("/google", async (c) => {
 
     const userIdStr = getId(user);
 
-    return c.json({
-      _id: userIdStr,
-      name: user.name,
-      email: user.email,
-      picture: user.picture,
-      token: await generateToken(userIdStr, c.env),
-      preferences: user.preferences,
-    });
+    return c.json(
+      {
+        _id: userIdStr,
+        name: user.name,
+        email: user.email,
+        picture: user.picture,
+        token: await generateToken(userIdStr, c.env),
+        preferences: user.preferences,
+      },
+      200,
+      addCorsHeaders(c),
+    );
   } catch (error) {
     console.error("Error in POST /api/v1/auth/google:", error);
     // Throw error to let global error handler in index.js handle it with proper CORS headers
@@ -165,12 +204,16 @@ auth.post("/google", async (c) => {
 auth.get("/me", protect, async (c) => {
   try {
     const user = c.get("user");
-    return c.json({
-      _id: getId(user),
-      name: user.name,
-      email: user.email,
-      preferences: user.preferences,
-    });
+    return c.json(
+      {
+        _id: getId(user),
+        name: user.name,
+        email: user.email,
+        preferences: user.preferences,
+      },
+      200,
+      addCorsHeaders(c),
+    );
   } catch (error) {
     console.error("Error in GET /api/v1/auth/me:", error);
     throw error;
