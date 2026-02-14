@@ -36,7 +36,7 @@ const TodoForm = ({ isOpen, closeModal, initialData = null }) => {
       textColor: "#000000",
       goalTime: 0,
       notes: "",
-      notes: "",
+
       subtasks: [],
       links: [],
       dayLabel: "Today",

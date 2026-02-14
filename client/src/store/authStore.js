@@ -48,9 +48,9 @@ export const useAuthStore = create(
         }
       },
 
-      login: async (email, password) => {
+      loginWithGoogle: async (token) => {
         try {
-          const response = await api.post("/auth/login", { email, password });
+          const response = await api.post("/auth/google", { token });
           localStorage.setItem("token", response.data.token);
           set({ user: response.data, isAuthenticated: true });
           document.documentElement.setAttribute(
@@ -60,25 +60,8 @@ export const useAuthStore = create(
           toast.success("Welcome back!");
           return true;
         } catch (error) {
+          console.error("Google login error:", error);
           toast.error(error.response?.data?.message || "Login failed");
-          return false;
-        }
-      },
-
-      register: async (name, email, password) => {
-        try {
-          const response = await api.post("/auth/register", {
-            name,
-            email,
-            password,
-          });
-          localStorage.setItem("token", response.data.token);
-          set({ user: response.data, isAuthenticated: true });
-          document.documentElement.setAttribute("data-theme", "calm");
-          toast.success("Account created!");
-          return true;
-        } catch (error) {
-          toast.error(error.response?.data?.message || "Registration failed");
           return false;
         }
       },

@@ -1,0 +1,19 @@
+name = "antigravity-api"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat_v2"]
+
+# Environment variables (set secrets via `wrangler secret put`)
+# Required secrets:
+#   MONGO_URI            - MongoDB Connection String
+#   JWT_SECRET           - JWT signing secret
+#   CLOUDINARY_CLOUD_NAME
+#   CLOUDINARY_API_KEY
+#   CLOUDINARY_API_SECRET
+
+[vars]
+NODE_ENV = "production"
+JWT_EXPIRES_IN = "7d"
+FRONTEND_URL = "*" 
+# Set to "*" initially to allow all origins during setup, user can restrict later.
+

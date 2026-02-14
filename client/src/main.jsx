@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import App from "./App.jsx";
 import "./index.css";
 import { Toaster } from "react-hot-toast";
@@ -11,7 +12,6 @@ try {
     const parsed = JSON.parse(authStorage);
     const theme = parsed?.state?.user?.preferences?.theme;
     if (theme) {
-      console.log("Early theme initialization:", theme);
       document.documentElement.setAttribute("data-theme", theme);
     }
   }
@@ -19,9 +19,14 @@ try {
   console.error("Error applying early theme:", error);
 }
 
+// Replace with your actual Google Client ID
+const GOOGLE_CLIENT_ID = "836758394002-m92kpjnrkfl5e95c1b00bugqvegoql7c.apps.googleusercontent.com";
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <App />
-    <Toaster position="bottom-right" />
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <App />
+      <Toaster position="bottom-right" />
+    </GoogleOAuthProvider>
   </React.StrictMode>,
 );

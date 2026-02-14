@@ -8,7 +8,6 @@ import {
 import { useEffect } from "react";
 import { useAuthStore } from "./store/authStore";
 import Login from "./pages/Login";
-import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import AllTodos from "./pages/AllTodos";
 import Calendar from "./pages/Calendar";
@@ -47,7 +46,6 @@ function App() {
       <OfflineBanner />
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
