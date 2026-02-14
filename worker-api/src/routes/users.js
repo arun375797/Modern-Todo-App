@@ -11,71 +11,116 @@ function getId(doc) {
   return doc._id.toString();
 }
 
+// Helper to get CORS origin
+function getCorsOrigin(origin) {
+  if (!origin) return null;
+  if (origin.includes(".vercel.app")) return origin;
+  if (
+    origin.includes("localhost:3000") ||
+    origin.includes("localhost:5173") ||
+    origin.startsWith("http://localhost:") ||
+    origin.startsWith("https://localhost:")
+  ) {
+    return origin;
+  }
+  return origin;
+}
+
+// Helper to add CORS headers to response
+function addCorsHeaders(c) {
+  const origin = c.req.header("Origin");
+  const allowedOrigin = getCorsOrigin(origin);
+  
+  const headers = {
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Credentials": "true",
+  };
+  
+  if (allowedOrigin) {
+    headers["Access-Control-Allow-Origin"] = allowedOrigin;
+  } else if (origin) {
+    headers["Access-Control-Allow-Origin"] = origin;
+  }
+  
+  return headers;
+}
+
 // All user routes require auth
 users.use("/*", protect);
 
 // PUT /api/v1/users/preferences
 users.put("/preferences", async (c) => {
-  const user = c.get("user");
-  const body = await c.req.json();
-  const userId = user._id; // ObjectId
+  try {
+    const user = c.get("user");
+    const body = await c.req.json();
+    const userId = user._id; // ObjectId
 
-  const db = await getDB(c.env);
-  const usersCol = db.collection("users");
+    const db = await getDB(c.env);
+    const usersCol = db.collection("users");
 
-  // Build the update object for nested preferences
-  const updateFields = {};
+    // Build the update object for nested preferences
+    const updateFields = {};
 
-  if (body.theme) updateFields["preferences.theme"] = body.theme;
-  if (body.font) updateFields["preferences.font"] = body.font;
-  if (body.alarmSound) updateFields["preferences.alarmSound"] = body.alarmSound;
+    if (body.theme) updateFields["preferences.theme"] = body.theme;
+    if (body.font) updateFields["preferences.font"] = body.font;
+    if (body.alarmSound) updateFields["preferences.alarmSound"] = body.alarmSound;
 
-  // Allow setting empty string for textColor
-  if (Object.prototype.hasOwnProperty.call(body, "textColor")) {
-    updateFields["preferences.textColor"] = body.textColor;
+    // Allow setting empty string for textColor
+    if (Object.prototype.hasOwnProperty.call(body, "textColor")) {
+      updateFields["preferences.textColor"] = body.textColor;
+    }
+
+    if (body.background) {
+      if (body.background.type) {
+        updateFields["preferences.background.type"] = body.background.type;
+      }
+      if (body.background.value !== undefined) {
+        updateFields["preferences.background.value"] = body.background.value;
+      }
+    }
+
+    if (body.overlay) {
+      if (body.overlay.dim !== undefined) {
+        updateFields["preferences.overlay.dim"] = body.overlay.dim;
+      }
+      if (body.overlay.blur !== undefined) {
+        updateFields["preferences.overlay.blur"] = body.overlay.blur;
+      }
+    }
+
+    updateFields.updatedAt = new Date();
+
+    await usersCol.updateOne({ _id: userId }, { $set: updateFields });
+
+    const updatedUser = await usersCol.findOne(
+      { _id: userId },
+      { projection: { password: 0 } },
+    );
+
+    return c.json(updatedUser.preferences);
+  } catch (error) {
+    console.error("Error in PUT /users/preferences:", error);
+    return c.json(
+      { message: error.message || "Internal Server Error" },
+      500,
+      addCorsHeaders(c)
+    );
   }
-
-  if (body.background) {
-    if (body.background.type) {
-      updateFields["preferences.background.type"] = body.background.type;
-    }
-    if (body.background.value !== undefined) {
-      updateFields["preferences.background.value"] = body.background.value;
-    }
-  }
-
-  if (body.overlay) {
-    if (body.overlay.dim !== undefined) {
-      updateFields["preferences.overlay.dim"] = body.overlay.dim;
-    }
-    if (body.overlay.blur !== undefined) {
-      updateFields["preferences.overlay.blur"] = body.overlay.blur;
-    }
-  }
-
-  updateFields.updatedAt = new Date();
-
-  await usersCol.updateOne({ _id: userId }, { $set: updateFields });
-
-  const updatedUser = await usersCol.findOne(
-    { _id: userId },
-    { projection: { password: 0 } },
-  );
-
-  return c.json(updatedUser.preferences);
 });
 
 // POST /api/v1/users/upload/background
 // Upload image to Cloudinary via their REST API, then save URL in MongoDB
 users.post("/upload/background", async (c) => {
-  const user = c.get("user");
-  const userId = user._id; // ObjectId
-  const formData = await c.req.formData();
-  const file = formData.get("image");
+  try {
+    const user = c.get("user");
+    const userId = user._id; // ObjectId
+    const formData = await c.req.formData();
+    const file = formData.get("image");
 
-  if (!file) {
-    return c.json({ message: "No file uploaded" }, 400);
-  }
+    if (!file) {
+      return c.json({ message: "No file uploaded" }, 400, addCorsHeaders(c));
+    }
 
   // Upload to Cloudinary using their upload API
   const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${c.env.CLOUDINARY_CLOUD_NAME}/image/upload`;
@@ -104,11 +149,11 @@ users.post("/upload/background", async (c) => {
     body: uploadFormData,
   });
 
-  if (!cloudinaryRes.ok) {
-    const err = await cloudinaryRes.text();
-    console.error("Cloudinary upload error:", err);
-    return c.json({ message: "Failed to upload image" }, 500);
-  }
+    if (!cloudinaryRes.ok) {
+      const err = await cloudinaryRes.text();
+      console.error("Cloudinary upload error:", err);
+      return c.json({ message: "Failed to upload image" }, 500, addCorsHeaders(c));
+    }
 
   const cloudinaryData = await cloudinaryRes.json();
   const imageUrl = cloudinaryData.secure_url;
@@ -130,10 +175,18 @@ users.post("/upload/background", async (c) => {
     .collection("users")
     .findOne({ _id: userId }, { projection: { password: 0 } });
 
-  return c.json({
-    url: imageUrl,
-    preferences: updatedUser.preferences,
-  });
+    return c.json({
+      url: imageUrl,
+      preferences: updatedUser.preferences,
+    });
+  } catch (error) {
+    console.error("Error in POST /users/upload/background:", error);
+    return c.json(
+      { message: error.message || "Internal Server Error" },
+      500,
+      addCorsHeaders(c)
+    );
+  }
 });
 
 export default users;
