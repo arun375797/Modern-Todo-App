@@ -30,7 +30,7 @@ auth.post("/google", async (c) => {
     const { token } = await c.req.json();
 
     if (!token) {
-      return c.json({ message: "No token provided" }, 400, addCorsHeaders(c));
+      return c.json({ message: "No token provided" }, 400);
     }
 
     // Verify Google Token

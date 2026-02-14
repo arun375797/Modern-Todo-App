@@ -1,10 +1,19 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import { useAuthStore } from "../store/authStore";
+import toast from "react-hot-toast";
 
 const Login = () => {
-  const { loginWithGoogle } = useAuthStore();
+  const { loginWithGoogle, isAuthenticated, isLoading } = useAuthStore();
   const navigate = useNavigate();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate("/app/today", { replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg p-4 overflow-hidden relative">
@@ -24,16 +33,33 @@ const Login = () => {
           <GoogleLogin
             onSuccess={async (credentialResponse) => {
               if (credentialResponse.credential) {
+                console.log("Google credential received, authenticating...");
                 const success = await loginWithGoogle(
                   credentialResponse.credential,
                 );
                 if (success) {
-                  navigate("/app/today");
+                  // Small delay to ensure state is updated
+                  setTimeout(() => {
+                    navigate("/app/today", { replace: true });
+                  }, 100);
+                } else {
+                  console.error("Login failed - check console for details");
                 }
+              } else {
+                toast.error("No credential received from Google");
               }
             }}
-            onError={() => {
-              console.log("Login Failed");
+            onError={(error) => {
+              console.error("Google login error:", error);
+              // Check if it's an origin error
+              if (error.error === "popup_closed_by_user") {
+                toast.error("Sign-in was cancelled");
+              } else {
+                toast.error(
+                  "Google sign-in failed. Please ensure your origin is authorized in Google Cloud Console.",
+                  { duration: 5000 }
+                );
+              }
             }}
             size="large"
             theme="filled_blue"

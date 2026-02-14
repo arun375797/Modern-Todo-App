@@ -14,7 +14,23 @@ To make the login button work, you need a Google Client ID:
 6.  Add the following **Authorized JavaScript origins**:
     - `http://localhost:5173` (or `http://localhost:3000` if you use port 3000)
     - `https://your-vercel-app.vercel.app` (Your production Vercel URL)
+    - **IMPORTANT**: Add the exact URL where your app is running (check browser address bar)
+    - For Vercel deployments, add both the preview URL and production URL
 7.  Copy the **Client ID**.
+
+### ⚠️ Troubleshooting: "The given origin is not allowed for the given client ID"
+
+If you see this error in the browser console:
+1. Check the exact URL in your browser's address bar (e.g., `https://your-app.vercel.app`)
+2. Go to Google Cloud Console > APIs & Services > Credentials
+3. Click on your OAuth 2.0 Client ID
+4. Under "Authorized JavaScript origins", add the exact origin (without trailing slash):
+   - For localhost: `http://localhost:5173` (or your port)
+   - For Vercel: `https://your-app.vercel.app` (and any preview URLs)
+   - **Note**: Origins must match exactly (including http vs https, port numbers, etc.)
+5. Click "Save"
+6. Wait 1-2 minutes for changes to propagate
+7. Refresh your app and try again
 
 ## 2. Update Client Code
 

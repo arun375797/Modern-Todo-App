@@ -50,9 +50,14 @@ export const useAuthStore = create(
 
       loginWithGoogle: async (token) => {
         try {
+          set({ isLoading: true }); // Set loading state
           const response = await api.post("/auth/google", { token });
           localStorage.setItem("token", response.data.token);
-          set({ user: response.data, isAuthenticated: true });
+          set({ 
+            user: response.data, 
+            isAuthenticated: true, 
+            isLoading: false 
+          });
           document.documentElement.setAttribute(
             "data-theme",
             response.data.preferences?.theme || "calm",
@@ -61,7 +66,11 @@ export const useAuthStore = create(
           return true;
         } catch (error) {
           console.error("Google login error:", error);
-          toast.error(error.response?.data?.message || "Login failed");
+          set({ isLoading: false });
+          const errorMessage = error.response?.data?.message || 
+            error.message || 
+            "Login failed. Please check your Google Client ID configuration.";
+          toast.error(errorMessage);
           return false;
         }
       },
@@ -179,7 +188,18 @@ export const useAuthStore = create(
     }),
     {
       name: "auth-storage",
-      getStorage: () => localStorage,
+      storage: {
+        getItem: (name) => {
+          const value = localStorage.getItem(name);
+          return value ? JSON.parse(value) : null;
+        },
+        setItem: (name, value) => {
+          localStorage.setItem(name, JSON.stringify(value));
+        },
+        removeItem: (name) => {
+          localStorage.removeItem(name);
+        },
+      },
       onRehydrateStorage: () => (state) => {
         // Apply theme immediately when state is rehydrated from localStorage
         if (state?.user?.preferences?.theme) {
