@@ -214,7 +214,7 @@ const Settings = () => {
               </div>
             </label>
 
-            {user?.preferences?.background?.type === "upload" && (
+            {user?.preferences?.background?.value && (
               <div className="flex-1 relative rounded-xl overflow-hidden border border-border h-48 group">
                 <img
                   src={user.preferences.background.value}

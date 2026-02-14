@@ -34,14 +34,13 @@ const Layout = () => {
   const isActive = (path) => pathname === path;
 
   // Background style if user has image
-  const bgStyle =
-    user?.preferences?.background?.type === "upload"
-      ? {
-          backgroundImage: `url(${user.preferences.background.value})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }
-      : {};
+  const bgStyle = user?.preferences?.background?.value
+    ? {
+        backgroundImage: `url(${user.preferences.background.value})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }
+    : {};
 
   const overlayStyle =
     user?.preferences?.background?.type === "upload"

@@ -51,7 +51,8 @@ const uploadBackground = asyncHandler(async (req, res) => {
   }
 
   const user = await User.findById(req.user.id);
-  const imageUrl = `/uploads/${req.file.filename}`;
+  // Cloudinary returns the full URL in req.file.path
+  const imageUrl = req.file.path;
 
   user.preferences.background = {
     type: "upload",
